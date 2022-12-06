@@ -1,0 +1,108 @@
+{% extends './basic.html' %}
+
+{% block title%} Checkout {% endblock %}
+
+{% block body %}
+<div class="container my-3">
+
+    <h4>Review You Item in Cart</h4>
+    <div class="item">
+        <ul class="list-group" id="cart_item">
+        </ul>
+    </div>
+
+    <!-- Address and Other details-->
+    <h4 class="my-4">Add the Address & Other Details</h4>
+    <form action="/submit/" method="post">
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="name">Name</label>
+                <input type="text" class="form-control alert-info" id="name" name="name" placeholder="name" autocomplete="off">
+            </div>
+            <div class="form-group col-md-6">
+                <label for="email">Email address</label>
+                <input type="email" class="form-control alert-info" id="email" name="email" placeholder="name@example.com"
+                    autocomplete="off">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="address">Address</label>
+            <input type="text" class="form-control alert-info" id="address" name="address" placeholder="1234 sola bride"
+                autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label for="address_line">Address Line</label>
+            <input type="text" class="form-control alert-info" id="address_line" name="address_line" placeholder="Mansi cricle"
+                autocomplete="off">
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-5">
+                <label for="city">City</label>
+                <input type="text" class="form-control alert-info" id="city" name="city" placeholder="city" autocomplete="off">
+            </div>
+
+            <div class="form-group col-md-4">
+                <label for="state">State</label>
+                <input type="text" class="form-control alert-info" id="state" name="state" placeholder="state" autocomplete="off">
+            </div>
+
+            <div class="form-group col-md-3">
+                <label for="zip">Zip</label>
+                <input type="text" class="form-control alert-info" id="zip" name="zip" placeholder="zip" autocomplete="off">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="tel" class="form-control alert-info" id="phone" name="phone" placeholder="phone" autocomplete="off">
+        </div>
+        <input type="hidden" name="page_name" value="checkout" />
+        <input type="hidden" name="item_details" id="item_details" />
+        <input type="hidden" name="item_ids" id="item_ids" />
+        <input type="hidden" name="total_price" id="total_price" />
+        <button type="submit" value="Submit" class="btn btn-outline-primary">Place Order</button>
+    </form>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+    if (localStorage.getItem('my_cart_name') == null) {
+        var my_cart_name = {}
+    }
+    else {
+        my_cart_name = JSON.parse(localStorage.getItem('my_cart_name'))
+    }
+    if ($.isEmptyObject(my_cart_name)) {
+        cart_str = '<p>Your cart is empty Please add the product</p>'
+        $('#cart_item').append(cart_str)
+    }
+    else {
+        cart_str = `<li class="list-group-item d-flex justify-content-between align-items-center alert-danger"><b>Item</b>
+                <div class="col-md-2"><span class="float-left"><b>Qty</b></span><span class="float-right"><b>Rs</b></span></div></li>`
+        $('#cart_item').append(cart_str)
+
+        let total_price = 0
+        for (product in my_cart_name) {
+            cart_str = `
+            <li class="list-group-item d-flex justify-content-between align-items-center alert-primary">${my_cart_name[product][0]}
+                <div class="col-md-2"><span class="badge badge-pill badge-primary float-left">${my_cart_name[product][1]}</span>
+                <span class="float-right"><b>${my_cart_name[product][2]}</b></span></div>
+            </li>`
+            $('#cart_item').append(cart_str)
+            total_price = total_price + my_cart_name[product][1] * my_cart_name[product][2]
+        }
+        $('#total_price').val(total_price);
+        cart_str = `<li class="list-group-item d-flex justify-content-between align-items-center alert-success"><b></b>
+                <div class="col-md-2"><span class="float-left"><b>Total</b></span><span class="float-right"><b>${total_price}</b></span></div></li>`
+        $('#cart_item').append(cart_str)
+    }
+    my_cart = JSON.parse(localStorage.getItem('my_cart'))
+    var product_ids = ''
+    for (product in my_cart) {
+        product_id = product.split('_').slice(-1)
+        product_ids = product_ids + product_id + ','
+    }
+    $('#item_ids').val(product_ids);
+    $('#item_details').val(localStorage.getItem('my_cart_name'));
+</script>
+{% endblock %}

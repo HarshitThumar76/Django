@@ -1,0 +1,99 @@
+{% extends './basic.html' %}
+
+{% block title%} Tracker {% endblock %}
+
+{% block body %}
+<div class="container my-3">
+
+    <h4>Track You Item</h4>
+
+    <!-- Address and Other details-->
+    <h4 class="my-4">Add The Order and Email for the order tracking</h4>
+    <form action="#" method="post" id="track_order">
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="order">Order Id</label>
+                <input type="text" class="form-control alert-info" id="order" name="order" placeholder="Order ID"
+                    autocomplete="off" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="email">Email address</label>
+                <input type="email" class="form-control alert-info" id="email" name="email" placeholder="name@example.com"
+                    autocomplete="off" required>
+            </div>
+        </div>
+        <button type="submit" value="Submit" class="btn btn-info">Track Order</button>
+    </form>
+    <div class="item my-4">
+        <h4>Your Order Status</h4>
+        <ul class="list-group" id="cart_item">
+            <p>Enter the Order Id and Email for the track the order</p>
+        </ul>
+    </div>
+    <div class="item my-4">
+        <h4>Your Order Details</h4>
+        <ul class="list-group" id="order_detail">
+            <p>Enter the Order Id and Email for the order details</p>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+    $('#track_order').submit(function () {
+        $('#cart_item').empty()
+        $('#order_detail').empty()
+        var formData = {
+            'order': $('input[name=order]').val(),
+            'email': $('input[name=email]').val(),
+            'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: '/tracker/',
+            data: formData,
+            encode: true,
+        }).done(function (data) {
+            if (data != '{}') {
+                json_data = JSON.parse(data)
+                update_data = json_data[0];
+
+                for (let i = 0; i < update_data.length; i++) {
+                    cart_str = `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                ${update_data[i]['desc']}
+                                <span class="badge badge-pill badge-primary"> ${update_data[i]['time']}</span></li>`
+                    $('#cart_item').append(cart_str)
+                }
+
+                order_data = JSON.parse(json_data[1]);
+                order_str = `<li class="list-group-item d-flex justify-content-between align-items-center alert-danger"><b>Item</b>
+                <div class="col-md-2"><span class="float-left"><b>Qty</b></span><span class="float-right"><b>Rs</b></span></div></li>`
+                $('#order_detail').append(order_str)
+
+                let total_price = 0
+                for (product in order_data) {
+                    order_str = `
+                    <li class="list-group-item d-flex justify-content-between align-items-center alert-primary">${order_data[product][0]}
+                        <div class="col-md-2"><span class="badge badge-pill badge-primary float-left">${order_data[product][1]}</span>
+                        <span class="float-right"><b>${order_data[product][2]}</b></span></div>
+                    </li>`
+                    $('#order_detail').append(order_str)
+                    total_price = total_price + order_data[product][1] * order_data[product][2]
+                }
+                order_str = `<li class="list-group-item d-flex justify-content-between align-items-center alert-success"><b></b>
+                <div class="col-md-2"><span class="float-left"><b>Total</b></span><span class="float-right"><b>${total_price}</b></span></div></li>`
+                $('#order_detail').append(order_str)
+
+            }
+            else {
+                cart_str = '<p>Sorry, We are not able to fetch this order id and email. Make sure to type correct order Id and email</p>'
+                $('#cart_item').append(cart_str)
+                $('#order_detail').append(cart_str)
+            }
+        });
+        event.preventDefault();
+    });
+</script>
+{% endblock %}

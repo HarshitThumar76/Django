@@ -1,0 +1,32 @@
+{% extends './basic.html' %}
+
+{% block title%} Submit {% endblock %}
+
+{% block body %}
+
+<!-- for the contact us page -->
+{% if message %}
+<div class="container">
+  <div class="col my-4">
+    <div class="alert alert-success" role="alert">
+      <p>{{message}}</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- for the submit page -->
+{% if data_dict %}
+<h1>Redirecting you to the merchant....</h1>
+<h1>Please do not refresh your page....</h1>
+<form action="https://securegw-stage.paytm.in/theia/processTransaction" method="post" name="paytm">
+  {% for key, value in data_dict.items %}
+  <input type="hidden" name="{{key}}" value="{{value}}">
+  {% endfor %}
+</form>
+<script type="text/javascript">
+  document.paytm.submit();
+</script>
+
+{% endif %}
+{% endblock %}

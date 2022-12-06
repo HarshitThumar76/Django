@@ -1,0 +1,191 @@
+{% extends './basic.html' %}
+
+{% block title%} Product {% endblock %}
+
+{% block body %}
+{% block css %}
+<style>
+    img {
+        width: 300px;
+        height: 400px;
+    }
+</style>
+{% endblock %}
+
+{% load static %}
+{% load humanize %}
+{% load extras %}
+
+<div class="container">
+    <div class="row">
+        <img src="/media/{{product.product_image}}" class="my-2 col-md-4" alt="..." s>
+        <div class="col-md-8 my-5">
+            <h5>{{product.product_name}}</h5>
+            <p>{{product.product_description}}</p>
+            <p>{{product.product_date}}</p>
+            <p><b>Rs.{{product.price}}</b></p>
+            <p>{{product.product_category}}</p>
+            <span id="plusminus_{{product.product_id}}" class="plusminus">
+                <button id='plus_{{product.product_id}}' class='btn btn-primary plus'>+</button>
+                <span id='cart_value_{{product.product_id}}'>0</span>
+                <button id='minus_{{product.product_id}}' class='btn btn-primary minus'>-</button>
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-3">
+    <div class="ml-5">
+        {% if user.is_authenticated %}
+        <form action="/post_comment/" method="post">
+            <h4>Comments ({{comments.count}})</h4>
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group col-md-1">
+                    <img src="/static/comment.jpeg" style="width: 40px;height: 40px;" class="rounded mx-auto d-block"
+                        alt="img">
+                </div>
+                <div class="form-group col-md-11">
+                    <input type="text" class="form-control alert-info" id="comment" name="comment"
+                        placeholder="Type your comment">
+                    <input type="hidden" name="product_id" id="product_id" value="{{product.product_id}}">
+                    <input type="hidden" name="parent_comment" id="parent_comment" value="">
+                </div>
+            </div>
+            <button type="submit" value="Submit" class="btn btn-info" style="margin-left:90px;">Submit</button>
+        </form>
+        {% else %}
+        <h4>Comments ({{comments.count}})</h4>
+        <p>Please login to post a comment</p>
+        {% endif %}
+
+        {% for comment in comments %}
+        <div class="form-row mt-3">
+            <div class="form-group col-md-1">
+                <img src="/static/comment.jpeg" style="width: 40px;height: 40px;margin-top: 5px;"
+                    class="rounded mx-auto d-block" alt="img">
+            </div>
+            <div class="form-group col-md-11">
+                <span><b>{{comment.user.first_name}}</b></span>
+                <br>
+                <span class="badge badge-secondary">{{comment.comment_time|naturaltime}}</span>
+                <p>{{comment.comment}}</p>
+
+                {% if user.is_authenticated %}
+                <p>
+                    <button class="btn btn-primary" type="button" data-toggle="collapse"
+                        data-target="#replay_{{comment.comment_id}}" aria-expanded="false"
+                        aria-controls="replay_{{comment.comment_id}}">
+                        Reply
+                    </button>
+                </p>
+                <div class="collapse" id="replay_{{comment.comment_id}}">
+                    <div class="card card-body">
+                        <form action="/post_comment/" method="post">
+                            {% csrf_token %}
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <img src="/static/comment.jpeg" style="width: 40px;height: 40px;"
+                                        class="rounded mx-auto d-block" alt="img">
+                                </div>
+                                <div class="form-group col-md-11">
+                                    <input type="text" class="form-control alert-info" id="comment" name="comment"
+                                        placeholder="Type your comment">
+                                    <input type="hidden" name="product_id" id="product_id"
+                                        value="{{product.product_id}}">
+                                    <input type="hidden" name="parent_comment" id="parent_comment"
+                                        value="{{comment.comment_id}}">
+                                </div>
+                            </div>
+                            <button type="submit" value="Submit" class="btn btn-info"
+                                style="margin-left:40px;">Submit</button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+                {% for reply in replyDict|get_val:comment.comment_id %}
+                <div class="form-row mt-3">
+                    <div class="form-group col-md-1">
+                        <img src="/static/comment.jpeg" style="width: 40px;height: 40px;margin-top: 5px;"
+                            class="rounded mx-auto d-block" alt="img">
+                    </div>
+                    <div class="form-group col-md-11">
+                        <span><b>{{reply.user.first_name}}</b></span>
+                        <br>
+                        <span class="badge badge-secondary">{{reply.comment_time|naturaltime}}</span>
+                        <p>{{reply.comment}}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endblock %}
+
+    {% block js %}
+    <script>
+        if (localStorage.getItem('my_cart') == null) {
+            var my_cart = {}
+        }
+        else {
+            product_id = location.pathname.split('/').slice(-1)
+            my_cart = JSON.parse(localStorage.getItem('my_cart'))
+            document.getElementById('my_cart_product').innerHTML = Object.keys(my_cart).length
+            document.getElementById('my_cart_item').innerHTML = Object.values(my_cart).reduce((a, b) => a + b, 0);
+            if (my_cart[`product_id_${product_id}`] != undefined) {
+                document.getElementById(`cart_value_${product_id}`).innerHTML = my_cart[`product_id_${product_id}`]
+            }
+        }
+        // Add to cart button function
+        // $('.add_to_cart').click(function () {
+        //     if (my_cart[this.id.toString()] != undefined) {
+        //         my_cart[this.id.toString()] = my_cart[this.id.toString()] + 1
+        //     }
+        //     else {
+        //         my_cart[this.id.toString()] = 1
+        //     }
+        //     localStorage.setItem('my_cart', JSON.stringify(my_cart))
+        //     document.getElementById('my_cart_product').innerHTML = Object.keys(my_cart).length
+        //     document.getElementById('my_cart_item').innerHTML = Object.values(my_cart).reduce((a, b) => a + b, 0);
+        // })
+
+        // update qty function
+        function updateqty(product_id, update_qty) {
+            if (localStorage.getItem('my_cart') == null) {
+                var my_cart = {}
+                my_cart[`product_id_${product_id}`] = update_qty
+            }
+            else {
+                my_cart = JSON.parse(localStorage.getItem('my_cart'))
+                if (update_qty != 0) {
+                    my_cart[`product_id_${product_id}`] = update_qty
+                }
+                else {
+                    delete my_cart[`product_id_${product_id}`]
+                }
+            }
+            localStorage.setItem('my_cart', JSON.stringify(my_cart))
+            document.getElementById('my_cart_item').innerHTML = Object.values(my_cart).reduce((a, b) => a + b, 0);
+            document.getElementById('my_cart_product').innerHTML = Object.keys(my_cart).length;
+        }
+        // minus function
+        $('.plusminus').on('click', 'button.minus', function () {
+            product_id = this.id.split('_').slice(-1)
+            product_qty = document.getElementById(`cart_value_${product_id}`).innerHTML
+            update_qty = Math.max(0, product_qty - 1)
+            document.getElementById(`cart_value_${product_id}`).innerHTML = update_qty
+            updateqty(product_id, update_qty)
+        })
+
+        // plus function
+        $('.plusminus').on('click', 'button.plus', function () {
+            product_id = this.id.split('_').slice(-1)
+            product_qty = document.getElementById(`cart_value_${product_id}`).innerHTML
+            update_qty = parseInt(product_qty) + 1
+            document.getElementById(`cart_value_${product_id}`).innerHTML = update_qty
+            updateqty(product_id, update_qty)
+        })
+
+    </script>
+    {% endblock %}

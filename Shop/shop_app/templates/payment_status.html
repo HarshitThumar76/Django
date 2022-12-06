@@ -1,0 +1,45 @@
+{% extends './basic.html' %}
+
+{% block title%} Payment Status {% endblock %}
+
+{% block body %}
+
+<div class="container">
+  <div class="col my-4">
+    {% if clearcart %}
+    <div class="alert alert-success" role="alert">
+      <p>{{message}}</p>
+    </div>
+    {% else %}
+    <div class="alert alert-danger" role="alert">
+      <p>{{message}}</p>
+    </div>
+    {% endif %}
+
+    {% for key, value in response.items %}
+    <div class="alert alert-primary">
+      <span class="float-left"><b>{{key}}</b></span>
+      <span class="float-right">{{value}}</span>
+      <br />
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+
+{% block js %}
+<script>
+  {% if clearcart %}
+  localStorage.clear()
+
+  document.getElementById('my_cart_product').innerHTML = 0
+  document.getElementById('my_cart_item').innerHTML = 0
+
+  popover_str = '<h5>Product on my cart</h5>'
+  document.getElementById('my_cart_popover').setAttribute('data-content', popover_str);
+  $('#my_cart_popover').popover();
+  {% endif %}
+</script>
+
+{% endblock %}
