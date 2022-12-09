@@ -100,7 +100,6 @@ def submit(request):
             return render(request, 'submit.html', message)
 
         elif request.POST.get('page_name') == "checkout":
-            import pdb;pdb.set_trace()
             name = request.POST.get('name', '')
             email = request.POST.get('email', '')
             phone = request.POST.get('phone', '')
